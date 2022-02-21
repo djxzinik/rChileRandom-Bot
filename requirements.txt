@@ -1,2 +1,3 @@
 praw
 mysql-connector-python
+GitPython
