@@ -107,6 +107,8 @@ def GetRandomPostId(mydb, reddit, randomRID):
         randomPostDate = datetime.utcfromtimestamp(reddit.submission(id = randomRID).created_utc)
         randomPostDateIso = randomPostDate.date().isocalendar()
         
+        #randomPostDateIso[1] -> Semana
+        #randomPostDateIso[0] -> Año
         cursor.execute('INSERT INTO `random_posts`(`post_reddit_id`, `post_week`, `post_year`) VALUES (%s,%s,%s)', (randomRID, randomPostDateIso[1], randomPostDateIso[0]))
         mydb.commit()
         return cursor.lastrowid
