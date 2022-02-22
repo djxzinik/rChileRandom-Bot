@@ -155,13 +155,16 @@ def InsertComment(mydb, commentRID, commentLevel, authorId, randomId, commentUTC
     return True
 
 if __name__ == '__main__':
+    print('Starting RandomBot')
     #Instancia de Reddit
+    print('Connecting to Reddit')
     reddit = praw.Reddit(
         client_id = os.environ['r_client_id'],
         client_secret = os.environ['r_client_secret'],
         user_agent = 'rChileRandom Bot 0.1'
     )
     #Instancia de MySQL
+    print('Connecting to DataBase')
     mydb = mysql.connector.connect(
         host = os.environ['db_host'],
         user = os.environ['db_user'],
@@ -170,6 +173,7 @@ if __name__ == '__main__':
     )
     
     #Este for nunca se termina ya que es un Stream
+    print('Watching for new comments on r/Chile')
     for comment in reddit.subreddit('chile').stream.comments():
         #Hay que comprobar que el creador del Random sea el AutoModerator
         #para evitar que un usuario cree un post fraudulento.
