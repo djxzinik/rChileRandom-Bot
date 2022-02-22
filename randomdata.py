@@ -28,7 +28,32 @@ def GetAllRandoms(mydb):
     
     return result
 
-def GetRandomUsersStats(mydb, randomId):
+def GetAllUsersStats(mydb):
+    """Obtiene las estádisticas de todos los usuarios que comentaron en todos
+    los Hilos Random
+    
+    Parameters
+    ----------
+    mydb : connection.MySQLConnection
+        Instancia de la base de datos
+    
+    Returns
+    -------
+    list
+        Listado de diccionarios con las llaves 'user' y 'count'
+    """
+    
+    cursor = mydb.cursor(dictionary=True)
+    query = """SELECT `user_username` as `user`, COUNT(`comment_id`) as `count` FROM `random_comments`
+            INNER JOIN `chile_users` ON `comment_user_id` = `user_id`
+            GROUP BY `comment_user_id`
+            ORDER BY `count` DESC"""
+    cursor.execute(query)
+    result = cursor.fetchall()
+    
+    return result
+
+def GetUsersStatsByRandom(mydb, randomId):
     """Obtiene las estádisticas de todos los usuarios que comentaron en un
     Hilo Random en específico
     
@@ -75,6 +100,24 @@ def PushUpdatedData():
     origin = repo.remote(name='origin')
     origin.push()
 
+def WriteCSVFileWithStats(stats, file):
+    """Escribe los datos estadísticos de los usuarios en la
+    instancia del archivo .csv
+    
+    Parameters
+    ----------
+    stats : list
+        Listado de diccionarios con las llaves 'user' y 'count'
+    file : File
+        Archivo .csv donde se escribiran los datos
+    """
+    #Solo vamos a escribir un .csv, así que no creo necesario implementar
+    #una librería de .csv (Ni aunque fueramos NodeJS)
+    file.write('Usuario,Comentarios\n')
+    for stat in stats:
+        file.write(stat['user'] + ',' + str(stat['count']) + '\n')
+    file.close()
+
 if __name__ == '__main__':
     #Si bien no es necesario que sea la primera llamada, prefiero que así lo
     #sea para evitar seguir procesando si hay un problema con el
@@ -118,20 +161,17 @@ if __name__ == '__main__':
         except ValueError:
             pass
         
-        usersStats = GetRandomUsersStats(mydb, random['id'])
+        usersStats = GetUsersStatsByRandom(mydb, random['id'])
         
-        weekFile = open(randomFileName + '_comments.csv', 'w')
-        #Solo vamos a escribir un .csv, así que no creo necesario implementar
-        #una librería de .csv (Ni aunque fueramos NodeJS)
-        weekFile.write('Usuario,Comentarios\n')
-        for stats in usersStats:
-            weekFile.write(stats['user'] + ',' + str(stats['count']) + '\n')
-        weekFile.close()
+        WriteCSVFileWithStats(usersStats, open(randomFileName + '_comments.csv', 'w'))
         
         metaFile = open(randomFileName + '.meta', 'w')
         #Guardamos el último comentario publicado para ahorrar recursos
         #en el futuro
         metaFile.write('last_comment=' + str(random['last_comment']))
         metaFile.close()
+    
+    allStats = GetAllUsersStats(mydb)
+    WriteCSVFileWithStats(allStats, open('./Data/Users_comments.csv', 'w'))
     
     PushUpdatedData()
