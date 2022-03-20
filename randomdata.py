@@ -4,6 +4,10 @@ import re
 from datetime import datetime
 from git import Repo
 
+IsTesting = True
+if 'prod' in os.environ and os.environ['prod'] == 1:
+    IsTesting = False
+
 def GetAllRandoms(mydb):
     """Obtiene todos los Hilos Randoms almacenados en la base de datos
     
@@ -174,4 +178,6 @@ if __name__ == '__main__':
     allStats = GetAllUsersStats(mydb)
     WriteCSVFileWithStats(allStats, open('./Data/Users_comments.csv', 'w'))
     
-    PushUpdatedData()
+    if not IsTesting:
+        PushUpdatedData()
+    
