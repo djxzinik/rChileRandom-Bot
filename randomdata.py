@@ -1,12 +1,101 @@
 import mysql.connector
 import os
+import praw
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from git import Repo
 
 IsTesting = True
 if 'prod' in os.environ and os.environ['prod'] == 1:
     IsTesting = False
+
+def CommentTop3ToRandom(mydb):
+    """Comenta el Top3 del random anterior en el Random actual solo los lunes en la mañana
+    
+    Parameters
+    ----------
+    mydb : connection.MySQLConnection
+        Instancia de la base de datos
+    """
+
+    today = datetime.today()
+    if today.weekday() != 0 and today.hour >= 15 and not IsTesting:
+        return
+    
+    prevRandomPostDateIso = (today - timedelta(days=1)).date().isocalendar()
+    
+    #prevRandomPostDateIso[1] -> Semana
+    #prevRandomPostDateIso[0] -> Año
+    prevRandomWeek = prevRandomPostDateIso[1]
+    prevRandomYear = prevRandomPostDateIso[0]
+    
+    prevRandom = GetRandomByWeek(mydb, prevRandomWeek, prevRandomYear)
+    if prevRandom is None:
+        print('WARN: Entry not found for Random ', prevRandomWeek, '-', prevRandomYear)
+        return
+    
+    print('Connecting to Reddit')
+    reddit = praw.Reddit(
+        client_id = os.environ['r_client_id'],
+        client_secret = os.environ['r_client_secret'],
+        user_agent = 'rChileRandom Bot 0.1',
+        username=os.environ['r_username'],
+        password=os.environ['r_password']
+    )
+    
+    randomsList = reddit.subreddit('chile').search('Discusión random semanal', sort='new', time_filter='week')
+    currentRandom = None
+    for random in randomsList:
+        if random.stickied:
+            currentRandom = random
+            break
+    if currentRandom is None:
+        print('WARN: Current Random Not Found')
+        return
+    
+    randomData = GetUsersStatsByRandom(mydb, prevRandom['id'])
+    if randomData == None:
+        print('WARN: Data not found for Random ', prevRandomWeek, '-', prevRandomYear)
+        return
+    
+    topUsers = []
+    topCount = 0
+    for data in randomData:
+        topUsers.append(data)
+        topCount = topCount + 1
+        if topCount >= 3:
+            break
+    
+    if len(topUsers) <= 0:
+        print('WARN: No users for Random ', prevRandomWeek, '-', prevRandomYear)
+        return
+    
+    topMessage = """Estos son los usuarios con más mensajes en el [**Hilo Random anterior**](https://www.reddit.com/r/chile/comments/""" + prevRandom['reddit_id'] + """/discusi%C3%B3n_random_semanal/):
+
+Lugar | Usuario | Comentarios
+:--:|:--:|:--:"""
+    topMedals = [ '🥇', '🥈', '🥉' ]
+    topCount = 0
+    for user in topUsers:
+        topMessage = topMessage + '\n' + topMedals[topCount] + '|**' + user['user'] + '**|' + str(user['count'])
+        topCount = topCount + 1
+    
+    topMessage = topMessage + """
+
+Para ver todos los datos, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly/""" + str(prevRandomYear) + '_' + str(prevRandomWeek) + """_comments.csv)
+
+Para ver los datos del hilo actual, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly/current_comments.csv)
+
+___
+
+Soy un bot y este mensaje fue realizado automáticamente. [**Más información**](https://github.com/JPZV/rChileRandom-Bot/)
+"""
+    if IsTesting:
+        topMessage = topMessage + '\n\nEste mensaje debería haberse publicado en el hilo ' + currentRandom.url
+        print(topMessage)
+        botUser = reddit.redditor('rChileRandomBot').message('TEST', topMessage)
+    else:
+        currentRandom.reply(topMessage)
 
 def GetAllRandoms(mydb):
     """Obtiene todos los Hilos Randoms almacenados en la base de datos
@@ -54,6 +143,34 @@ def GetAllUsersStats(mydb):
             ORDER BY `count` DESC"""
     cursor.execute(query)
     result = cursor.fetchall()
+    
+    return result
+
+def GetRandomByWeek(mydb, week, year):
+    """Obtiene el Hilo Random según su año y número de semana
+    
+    Parameters
+    ----------
+    mydb : connection.MySQLConnection
+        Instancia de la base de datos
+    week : int
+        Número de semana del Random
+    year : int
+        Año del Random
+    
+    Returns
+    -------
+    dict
+        Diccionario con las llaves 'id', 'week', 'year' y 'last_comment'
+    """
+    
+    cursor = mydb.cursor(dictionary=True)
+    query = """SELECT `post_id` as `id`, `post_week` as `week`, `post_year` as `year`, `post_reddit_id` as `reddit_id`, UNIX_TIMESTAMP(MAX(`comment_UTC`)) as `last_comment` FROM `random_posts`
+            LEFT JOIN `random_comments` ON `post_id` = `comment_random_id`
+            WHERE `post_year` = %s AND `post_week` = %s
+            GROUP BY `post_id`"""
+    cursor.execute(query, (year, week))
+    result = cursor.fetchone()
     
     return result
 
@@ -181,3 +298,4 @@ if __name__ == '__main__':
     if not IsTesting:
         PushUpdatedData()
     
+    CommentTop3ToRandom(mydb)
