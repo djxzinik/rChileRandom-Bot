@@ -1,3 +1,5 @@
+![alt text](https://github.com/JPZV/rChileRandom-Bot/blob/main/Assets/Profile%20Picture.jpg?raw=true)
+
 # r/Chile Random bot
 
 Este es un simple *bot* diseñado para contar y mantener un registro de la cantidad de comentarios que realiza un usuario en cada Hilo Random Semanal que se realiza en [r/Chile](https://www.reddit.com/r/chile)
