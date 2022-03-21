@@ -1,4 +1,4 @@
-![alt text](https://github.com/JPZV/rChileRandom-Bot/blob/main/Assets/Profile%20Picture.jpg?raw=true)
+![alt text](https://github.com/JPZV/rChileRandom-Bot/blob/main/Assets/Profile%20Picture.png?raw=true)
 
 # r/Chile Random bot
 
