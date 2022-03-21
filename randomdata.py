@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from git import Repo
 
 IsTesting = True
-if 'prod' in os.environ and os.environ['prod'] == 1:
+if 'prod' in os.environ and os.environ['prod'] == '1':
     IsTesting = False
 
 def CommentTop3ToRandom(mydb):
