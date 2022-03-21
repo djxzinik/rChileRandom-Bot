@@ -6,6 +6,8 @@ En esta rama se encuentran todos los datos procesados del *bot*.
 - [Cantidad de comentarios en el hilo actual por usuario](weekly/current_comments.csv)
 - [Cantidad de comentarios históricos por usuario](Users_comments.csv)
 
+Los datos se irán actualizando todos los días a las **07:00** y a las **19:00** horas **chilenas** (UTC-3 o UTC-4 dependiendo de la temporada)
+
 ## Licencia
 [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html)
 
