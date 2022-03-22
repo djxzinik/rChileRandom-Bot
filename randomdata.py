@@ -19,7 +19,7 @@ def CommentTop3ToRandom(mydb):
     """
 
     today = datetime.today()
-    if today.weekday() != 0 and today.hour >= 15 and not IsTesting:
+    if (today.weekday() != 0 or today.hour >= 15) and not IsTesting:
         return
     
     prevRandomPostDateIso = (today - timedelta(days=1)).date().isocalendar()
