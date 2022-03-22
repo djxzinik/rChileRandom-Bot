@@ -29,9 +29,8 @@ def CommentTop3ToRandom(mydb):
     prevRandomWeek = prevRandomPostDateIso[1]
     prevRandomYear = prevRandomPostDateIso[0]
     
-    prevRandom = GetRandomByWeek(mydb, prevRandomWeek, prevRandomYear)
-    if prevRandom is None:
-        print('WARN: Entry not found for Random ', prevRandomWeek, '-', prevRandomYear)
+    prevRandom, topUsers = GetTop3ForRandomByWeek(mydb, prevRandomWeek, prevRandomYear)
+    if prevRandom is None or topUsers is None:
         return
     
     print('Connecting to Reddit')
@@ -51,23 +50,6 @@ def CommentTop3ToRandom(mydb):
             break
     if currentRandom is None:
         print('WARN: Current Random Not Found')
-        return
-    
-    randomData = GetUsersStatsByRandom(mydb, prevRandom['id'])
-    if randomData == None:
-        print('WARN: Data not found for Random ', prevRandomWeek, '-', prevRandomYear)
-        return
-    
-    topUsers = []
-    topCount = 0
-    for data in randomData:
-        topUsers.append(data)
-        topCount = topCount + 1
-        if topCount >= 3:
-            break
-    
-    if len(topUsers) <= 0:
-        print('WARN: No users for Random ', prevRandomWeek, '-', prevRandomYear)
         return
     
     topMessage = """Estos son los usuarios con más mensajes en el [**Hilo Random anterior**](https://www.reddit.com/r/chile/comments/""" + prevRandom['reddit_id'] + """/discusi%C3%B3n_random_semanal/):
@@ -173,6 +155,31 @@ def GetRandomByWeek(mydb, week, year):
     result = cursor.fetchone()
     
     return result
+
+def GetTop3ForRandomByWeek(mydb, week, year):
+    prevRandom = GetRandomByWeek(mydb, week, year)
+    if prevRandom is None:
+        print('WARN: Entry not found for Random ', week, '-', year)
+        return (None,None)
+    
+    randomData = GetUsersStatsByRandom(mydb, prevRandom['id'])
+    if randomData == None:
+        print('WARN: Data not found for Random ', week, '-', year)
+        return (None,None)
+    
+    topUsers = []
+    topCount = 0
+    for data in randomData:
+        topUsers.append(data)
+        topCount = topCount + 1
+        if topCount >= 3:
+            break
+    
+    if len(topUsers) <= 0:
+        print('WARN: No users for Random ', week, '-', year)
+        return (None,None)
+    
+    return (prevRandom, topUsers)
 
 def GetUsersStatsByRandom(mydb, randomId):
     """Obtiene las estádisticas de todos los usuarios que comentaron en un

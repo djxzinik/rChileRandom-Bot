@@ -1,7 +1,8 @@
 import mysql.connector
 import os
 import praw
-from datetime import datetime
+import randomdata
+from datetime import datetime, timedelta
 
 
 def GetAuthourId(mydb, username, commentUTC):
@@ -154,6 +155,102 @@ def InsertComment(mydb, commentRID, commentLevel, authorId, randomId, commentUTC
     mydb.commit()
     return True
 
+def ProcessCommentContent(mydb, comment):
+    if comment is None or comment.body is None:
+        return
+        
+    cmdTriggers = [ 'randombot!', 'u/rchilerandombot!' ]
+    
+    commentLines = comment.body.splitlines()
+    for line in commentLines:
+        line = line.lower()
+        for trigger in cmdTriggers:
+            if line.startswith(trigger):
+                lineSplit = line.split(trigger)
+                if len(lineSplit) <= 1:
+                    continue
+                lineCmd = lineSplit[1]
+                if lineCmd.startswith('top'):
+                    ReplyWithTop5(mydb, comment)
+                elif lineCmd.startswith('info') or lineCmd.startswith('link'):
+                    ReplyWithBotInfo(comment)
+                break
+
+def ReplyWithBotInfo(comment):
+    if comment is None:
+        return
+    
+    replyMessage = """Este es un bot realizado por [**u/**](https://reddit.com/u/jzpv/)[**JPZV**](https://reddit.com/u/jzpv/) para mantener un registro de cuantos comentarios realiza cada usuario en el Random de r/Chile
+
+Para ver todos los datos del hilo actual, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly/current_comments.csv)
+
+Para ver los datos de hilos anteriores, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly)
+
+Si quieres ver los datos de forma más visual, visita esta [**página**](https://rchile.0x00.cl/) (Hecho por [**u/**](https://reddit.com/u/0x00cl/)[**0x00cl**](https://reddit.com/u/0x00cl/))
+
+Si quieres revisar el código del bot, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/)
+
+Si tienes ideas, sugerencias, o encontraste un error, puedes dejar tu mensaje en [**GitHub**](https://github.com/JPZV/rChileRandom-Bot/issues) o enviarle un mensaje privado a [**JPZV**](https://www.reddit.com/message/compose/?to=jpzv&subject=Bot%20Hilo%20Random)
+
+___
+
+Soy un bot y este mensaje fue realizado automáticamente. [**Más información**](https://github.com/JPZV/rChileRandom-Bot/)"""
+            
+    comment.reply(replyMessage)
+
+def ReplyWithTop5(mydb, comment):
+    if comment is None:
+        return
+    
+    randomPostDateIso = datetime.today().date().isocalendar()
+    #randomPostDateIso[1] -> Semana
+    #randomPostDateIso[0] -> Año
+    randomWeek = randomPostDateIso[1]
+    randomYear = randomPostDateIso[0]
+    
+    random, topUsers = randomdata.GetTop3ForRandomByWeek(mydb, randomWeek, randomYear)
+    if random is None or topUsers is None:
+        randomPostDateIso = (datetime.today() - timedelta(days=1)).date().isocalendar()
+        #randomPostDateIso[1] -> Semana
+        #randomPostDateIso[0] -> Año
+        randomWeek = randomPostDateIso[1]
+        randomYear = randomPostDateIso[0]
+        
+        random, topUsers = randomdata.GetTop3ForRandomByWeek(mydb, randomWeek, randomYear)
+        if random is None or topUsers is None:
+            errorMessage = """Lo siento, no pude encontrar los datos para este Hilo Random.
+
+Por favor, intenta nuevamente más tarde. También puedes ver los últimos datos que tengo [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly/current_comments.csv)
+
+___
+
+Soy un bot y este mensaje fue realizado automáticamente. [**Más información**](https://github.com/JPZV/rChileRandom-Bot/)"""
+            
+            comment.reply(errorMessage)
+            return
+    
+    topMessage = """Estos son los usuarios con más mensajes en el Hilo Random actual:
+
+Lugar | Usuario | Comentarios
+:--:|:--:|:--:"""
+    topMedals = [ '🥇', '🥈', '🥉' ]
+    topCount = 0
+    for user in topUsers:
+        topMessage = topMessage + '\n' + topMedals[topCount] + '|**' + user['user'] + '**|' + str(user['count'])
+        topCount = topCount + 1
+    
+    topMessage = topMessage + """
+
+Para ver todos los datos, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly/current_comments.csv)
+
+También puedes ver los datos de forma gráfica [**aquí**](https://rchile.0x00.cl/)
+
+___
+
+Soy un bot y este mensaje fue realizado automáticamente. [**Más información**](https://github.com/JPZV/rChileRandom-Bot/)
+"""
+    comment.reply(topMessage)
+
 if __name__ == '__main__':
     print('Starting RandomBot')
     #Instancia de Reddit
@@ -161,7 +258,9 @@ if __name__ == '__main__':
     reddit = praw.Reddit(
         client_id = os.environ['r_client_id'],
         client_secret = os.environ['r_client_secret'],
-        user_agent = 'rChileRandom Bot 0.1'
+        user_agent = 'rChileRandom Bot 0.1',
+        username=os.environ['r_username'],
+        password=os.environ['r_password']
     )
     #Instancia de MySQL
     print('Connecting to DataBase')
@@ -199,3 +298,5 @@ if __name__ == '__main__':
         
         if InsertComment(mydb, commentRID, commentLevel, authorId, randomId, commentUTC, commentNumber):
             print('Comment', commentRID, 'from Random', randomRID, 'added successfully')
+            
+            ProcessCommentContent(mydb, comment)

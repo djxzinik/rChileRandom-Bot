@@ -25,6 +25,12 @@ Con el objetivo de poder procesar los datos correctamente, el *bot* captura los 
   - Número del comentario en el Hilo
 
 
+## Comandos
+El ejecutable del *bot* no posee ningún comando ni parámetro. Sin embargo, dentro de los Hilos Random, es posible llamar al bot ocupando dos comandos:
+
+- `randombot!top`: El *bot* responderá con el TOP3 del hilo actual hasta el momento. Estos datos son en vivo y pueden diferir con los que sale en la rama [**Data**](https://github.com/JPZV/rChileRandom-Bot/tree/data)
+- `randombot!info`: El *bot* responderá con los enlaces asociados al *bot*, tales como los datos del hilo actual, los hilos anterioers, etc.
+
 ## Uso
 
 Para ocupar este *bot*, se tienen que cumplir ciertos requisitos:
