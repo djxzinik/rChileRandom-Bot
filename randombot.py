@@ -156,6 +156,16 @@ def InsertComment(mydb, commentRID, commentLevel, authorId, randomId, commentUTC
     return True
 
 def ProcessCommentContent(mydb, comment):
+    """Procesa el contenido del comentario para buscar algún comando del bot
+    
+    Parameters
+    ----------
+    mydb : connection.MySQLConnection
+        Instancia de la base de datos
+    comment : praw.models.Comment
+        Comentario a procesar
+    """
+
     if comment is None or comment.body is None:
         return
         
@@ -177,6 +187,14 @@ def ProcessCommentContent(mydb, comment):
                 break
 
 def ReplyWithBotInfo(comment):
+    """Responde a un comentario con la información del Bot
+    
+    Parameters
+    ----------
+    comment : praw.models.Comment
+        Comentario a procesar
+    """
+
     if comment is None:
         return
     
@@ -200,6 +218,16 @@ Soy un bot y este mensaje fue realizado automáticamente. [**Más información**
 
 def ReplyWithTop5(mydb, comment):
     if comment is None:
+    """Responde a un comentario con el Top del Random actual
+    
+    Parameters
+    ----------
+    mydb : connection.MySQLConnection
+        Instancia de la base de datos
+    comment : praw.models.Comment
+        Comentario a procesar
+    """
+    
         return
     
     randomPostDateIso = datetime.today().date().isocalendar()

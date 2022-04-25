@@ -157,6 +157,24 @@ def GetRandomByWeek(mydb, week, year):
     return result
 
 def GetTop3ForRandomByWeek(mydb, week, year):
+    """Obtiene el Top de un Random por semana y año
+    
+    Parameters
+    ----------
+    mydb : connection.MySQLConnection
+        Instancia de la base de datos
+    week : int
+        Número de la semana
+    year : int
+        Año en formato YYYY
+    
+    Returns
+    -------
+    tuple (Dict<Random>, List<User>)
+        El primer valor es un diccionario obtenido por GetRandomByWeek(mydb, week, year)
+        El segundo valor es un listado de diccionarios con las llaves 'user' y 'count'
+    """
+
     prevRandom = GetRandomByWeek(mydb, week, year)
     if prevRandom is None:
         print('WARN: Entry not found for Random ', week, '-', year)
