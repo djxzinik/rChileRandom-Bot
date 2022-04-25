@@ -29,7 +29,7 @@ def CommentTop3ToRandom(mydb):
     prevRandomWeek = prevRandomPostDateIso[1]
     prevRandomYear = prevRandomPostDateIso[0]
     
-    prevRandom, topUsers = GetTop3ForRandomByWeek(mydb, prevRandomWeek, prevRandomYear)
+    prevRandom, topUsers = GetTopForRandomByWeek(mydb, prevRandomWeek, prevRandomYear, 3)
     if prevRandom is None or topUsers is None:
         return
     
@@ -157,7 +157,7 @@ def GetRandomByWeek(mydb, week, year):
     
     return result
 
-def GetTop3ForRandomByWeek(mydb, week, year):
+def GetTopForRandomByWeek(mydb, week, year, amount):
     """Obtiene el Top de un Random por semana y año
     
     Parameters
@@ -168,6 +168,8 @@ def GetTop3ForRandomByWeek(mydb, week, year):
         Número de la semana
     year : int
         Año en formato YYYY
+    amount : int
+        Cantidad de entradas a buscar
     
     Returns
     -------
@@ -191,7 +193,7 @@ def GetTop3ForRandomByWeek(mydb, week, year):
     for data in randomData:
         topUsers.append(data)
         topCount = topCount + 1
-        if topCount >= 3:
+        if topCount >= amount:
             break
     
     if len(topUsers) <= 0:

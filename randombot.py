@@ -181,7 +181,12 @@ def ProcessCommentContent(mydb, comment):
                     continue
                 lineCmd = lineSplit[1]
                 if lineCmd.startswith('top'):
-                    ReplyWithTop5(mydb, comment)
+                    topMax = 3
+                    if lineCmd.startswith('top5'):
+                        topMax = 5
+                    elif lineCmd.startswith('top10'):
+                        topMax = 10
+                    ReplyWithTop(mydb, comment, topMax)
                 elif lineCmd.startswith('info') or lineCmd.startswith('link'):
                     ReplyWithBotInfo(comment)
                 break
@@ -216,8 +221,7 @@ Soy un bot y este mensaje fue realizado automáticamente. [**Más información**
             
     comment.reply(replyMessage)
 
-def ReplyWithTop5(mydb, comment):
-    if comment is None:
+def ReplyWithTop(mydb, comment, topMax):
     """Responde a un comentario con el Top del Random actual
     
     Parameters
@@ -226,8 +230,11 @@ def ReplyWithTop5(mydb, comment):
         Instancia de la base de datos
     comment : praw.models.Comment
         Comentario a procesar
+    topMax : int
+        Cantidad máxima de entradas en el top. Debe ser un valor mayor que 0 e igual o menor a 10
     """
     
+    if comment is None or topMax <= 0:
         return
     
     randomPostDateIso = datetime.today().date().isocalendar()
@@ -236,7 +243,7 @@ def ReplyWithTop5(mydb, comment):
     randomWeek = randomPostDateIso[1]
     randomYear = randomPostDateIso[0]
     
-    random, topUsers = randomdata.GetTop3ForRandomByWeek(mydb, randomWeek, randomYear)
+    random, topUsers = randomdata.GetTopForRandomByWeek(mydb, randomWeek, randomYear, topMax)
     if random is None or topUsers is None:
         randomPostDateIso = (datetime.today() - timedelta(days=1)).date().isocalendar()
         #randomPostDateIso[1] -> Semana
@@ -244,7 +251,7 @@ def ReplyWithTop5(mydb, comment):
         randomWeek = randomPostDateIso[1]
         randomYear = randomPostDateIso[0]
         
-        random, topUsers = randomdata.GetTop3ForRandomByWeek(mydb, randomWeek, randomYear)
+        random, topUsers = randomdata.GetTopForRandomByWeek(mydb, randomWeek, randomYear, topMax)
         if random is None or topUsers is None:
             errorMessage = """Lo siento, no pude encontrar los datos para este Hilo Random.
 
@@ -261,9 +268,11 @@ Soy un bot y este mensaje fue realizado automáticamente. [**Más información**
 
 Lugar | Usuario | Comentarios
 :--:|:--:|:--:"""
-    topMedals = [ '🥇', '🥈', '🥉' ]
+    topMedals = [ '🥇', '🥈', '🥉', '4°' , '5°' , '6°' , '7°' , '8°' , '9°' , '10°' ]
     topCount = 0
     for user in topUsers:
+        if topCount >= topMax or topCount >= len(topMedals):
+            break
         userLink = '[**u/**](https://reddit.com/u/' + user['user'] + '/)[**' + user['user'] + '**](https://reddit.com/u/' + user['user'] + '/)'
         topMessage = topMessage + '\n' + topMedals[topCount] + '|**' + userLink + '**|' + str(user['count'])
         topCount = topCount + 1
