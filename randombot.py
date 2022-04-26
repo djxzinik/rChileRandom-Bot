@@ -273,8 +273,7 @@ Lugar | Usuario | Comentarios
     for user in topUsers:
         if topCount >= topMax or topCount >= len(topMedals):
             break
-        userLink = '[**u/**](https://reddit.com/u/' + user['user'] + '/)[**' + user['user'] + '**](https://reddit.com/u/' + user['user'] + '/)'
-        topMessage = topMessage + '\n' + topMedals[topCount] + '|**' + userLink + '**|' + str(user['count'])
+        topMessage = topMessage + '\n' + topMedals[topCount] + '|**' + user['user'] + '**|' + str(user['count'])
         topCount = topCount + 1
     
     topMessage = topMessage + """
