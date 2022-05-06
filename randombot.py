@@ -2,6 +2,8 @@ import mysql.connector
 import os
 import praw
 import randomdata
+import time
+import traceback
 from datetime import datetime, timedelta
 
 
@@ -288,7 +290,7 @@ Soy un bot y este mensaje fue realizado automáticamente. [**Más información**
 """
     comment.reply(topMessage)
 
-if __name__ == '__main__':
+def Main():
     print('Starting RandomBot')
     #Instancia de Reddit
     print('Connecting to Reddit')
@@ -337,3 +339,12 @@ if __name__ == '__main__':
             print('Comment', commentRID, 'from Random', randomRID, 'added successfully')
             
             ProcessCommentContent(mydb, comment)
+
+if __name__ == '__main__':
+    while (True):
+        try:
+            Main()
+        except Exception as e:
+            print('Exception has ocurred:\n', traceback.format_exc())
+            print('Restarting bot in 5 minutes...')
+            time.sleep(5 * 60)
