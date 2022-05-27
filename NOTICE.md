@@ -1,10 +1,10 @@
-`Última actualización: 27/05/2022 16:50`
+`Última actualización: 27/05/2022 16:54`
 
 # Nota del fin del servicio
 
 Debido a problemas de salud del [Creador](https://github.com/JPZV), se tiene planificado el fin del mantenimiento del servicio para el día 26 de Junio del 2022.
 
-Debido a que el servicio principal del bot está diseñado para que funcione (casi) sin la necesidad de la intervención de una persona siempre y cuando el servicio no sea detenido por una fuerza mayor, tales como:
+Debido a que el servicio principal del bot está diseñado para que funcione (casi) sin la necesidad de la intervención de una persona, este seguirá funcionando sin interrupciones siempre y cuando el servicio principal no sea detenido por una fuerza mayor, tales como:
 
 - Interrupción del suministro del servidor.
 - Desmantelamiento del servidor.
