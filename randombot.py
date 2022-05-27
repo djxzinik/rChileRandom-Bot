@@ -216,11 +216,8 @@ Si quieres ver los datos de forma más visual, visita esta [**página**](https:/
 Si quieres revisar el código del bot, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/)
 
 Si tienes ideas, sugerencias, o encontraste un error, puedes dejar tu mensaje en [**GitHub**](https://github.com/JPZV/rChileRandom-Bot/issues) o enviarle un mensaje privado a [**JPZV**](https://www.reddit.com/message/compose/?to=jpzv&subject=Bot%20Hilo%20Random)
-
-___
-
-Soy un bot y este mensaje fue realizado automáticamente. [**Más información**](https://github.com/JPZV/rChileRandom-Bot/)"""
-            
+""" + randomdata.GetInfoText()
+    
     comment.reply(replyMessage)
 
 def ReplyWithTop(mydb, comment, topMax):
@@ -258,10 +255,7 @@ def ReplyWithTop(mydb, comment, topMax):
             errorMessage = """Lo siento, no pude encontrar los datos para este Hilo Random.
 
 Por favor, intenta nuevamente más tarde. También puedes ver los últimos datos que tengo [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly/current_comments.csv)
-
-___
-
-Soy un bot y este mensaje fue realizado automáticamente. [**Más información**](https://github.com/JPZV/rChileRandom-Bot/)"""
+""" + randomdata.GetInfoText()
             
             comment.reply(errorMessage)
             return
@@ -283,11 +277,8 @@ Lugar | Usuario | Comentarios
 Para ver todos los datos, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly/current_comments.csv)
 
 También puedes ver los datos de forma gráfica [**aquí**](https://rchile.0x00.cl/)
-
-___
-
-Soy un bot y este mensaje fue realizado automáticamente. [**Más información**](https://github.com/JPZV/rChileRandom-Bot/)
-"""
+""" + randomdata.GetInfoText()
+    
     comment.reply(topMessage)
 
 def Main():

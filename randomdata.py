@@ -67,11 +67,8 @@ Lugar | Usuario | Comentarios
 Para ver todos los datos, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly/""" + str(prevRandomYear) + '_' + str(prevRandomWeek) + """_comments.csv)
 
 Para ver los datos del hilo actual, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly/current_comments.csv)
-
-___
-
-Soy un bot y este mensaje fue realizado automáticamente. [**Más información**](https://github.com/JPZV/rChileRandom-Bot/)
-"""
+""" + GetInfoText()
+    
     if IsTesting:
         topMessage = topMessage + '\n\nEste mensaje debería haberse publicado en el hilo ' + currentRandom.url
         print(topMessage)
@@ -127,6 +124,23 @@ def GetAllUsersStats(mydb):
     result = cursor.fetchall()
     
     return result
+
+def GetInfoText():
+    """Genera y devuelve el Texto de Más Info para los comentarios
+    
+    Returns
+    -------
+    MultiLine String
+        Texto de Más Info
+    """
+    
+    return """
+___
+
+Soy un bot y este mensaje fue realizado automáticamente. [**Más información**](https://github.com/JPZV/rChileRandom-Bot/)
+
+[**Noticia fin del servicio**](https://github.com/JPZV/rChileRandom-Bot/blob/main/NOTICE.md)
+"""
 
 def GetRandomByWeek(mydb, week, year):
     """Obtiene el Hilo Random según su año y número de semana
