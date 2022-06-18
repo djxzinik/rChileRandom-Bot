@@ -6,6 +6,7 @@ import time
 import traceback
 from datetime import datetime, timedelta
 
+from Commands import InfoInterpreter, TopInterpreter
 
 def GetAuthourId(mydb, username, commentUTC):
     """Obtiene el ID del autor del comentario desde la base de datos
@@ -144,7 +145,7 @@ def InsertComment(mydb, commentRID, commentLevel, authorId, randomId, commentUTC
     Boolean
         True en caso de que se pudo insertar el comentario. False en caso contrario
     """
-
+    
     cursor = mydb.cursor(buffered=True)
     cursor.execute('SELECT `comment_id` FROM `random_comments` WHERE `comment_reddit_id` = %s LIMIT 1', (commentRID, ))
     #Hay que evitar subir el mismo Comentario dos veces para que no se cuente de más
@@ -157,7 +158,7 @@ def InsertComment(mydb, commentRID, commentLevel, authorId, randomId, commentUTC
     mydb.commit()
     return True
 
-def ProcessCommentContent(mydb, comment):
+def ProcessCommentContent(mydb, comment, interpreters):
     """Procesa el contenido del comentario para buscar algún comando del bot
     
     Parameters
@@ -182,104 +183,11 @@ def ProcessCommentContent(mydb, comment):
                 if len(lineSplit) <= 1:
                     continue
                 lineCmd = lineSplit[1]
-                if lineCmd.startswith('top'):
-                    topMax = 3
-                    if lineCmd.startswith('top5'):
-                        topMax = 5
-                    elif lineCmd.startswith('top10'):
-                        topMax = 10
-                    ReplyWithTop(mydb, comment, topMax)
-                elif lineCmd.startswith('info') or lineCmd.startswith('link'):
-                    ReplyWithBotInfo(comment)
+                
+                for interpreter in interpreters:
+                    if interpreter.CanInterpretate(lineCmd):
+                        interpreter.Interpretate(lineCmd, comment)
                 break
-
-def ReplyWithBotInfo(comment):
-    """Responde a un comentario con la información del Bot
-    
-    Parameters
-    ----------
-    comment : praw.models.Comment
-        Comentario a procesar
-    """
-
-    if comment is None:
-        return
-    
-    replyMessage = """Este es un bot realizado por [**u/**](https://reddit.com/u/jzpv/)[**JPZV**](https://reddit.com/u/jzpv/) para mantener un registro de cuantos comentarios realiza cada usuario en el Random de r/Chile
-
-Para ver todos los datos del hilo actual, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly/current_comments.csv)
-
-Para ver los datos de hilos anteriores, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly)
-
-Si quieres ver los datos de forma más visual, visita esta [**página**](https://rchile.0x00.cl/) (Hecho por [**u/**](https://reddit.com/u/0x00cl/)[**0x00cl**](https://reddit.com/u/0x00cl/))
-
-Si quieres revisar el código del bot, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/)
-
-Si tienes ideas, sugerencias, o encontraste un error, puedes dejar tu mensaje en [**GitHub**](https://github.com/JPZV/rChileRandom-Bot/issues) o enviarle un mensaje privado a [**JPZV**](https://www.reddit.com/message/compose/?to=jpzv&subject=Bot%20Hilo%20Random)
-""" + randomdata.GetInfoText()
-    
-    comment.reply(replyMessage)
-
-def ReplyWithTop(mydb, comment, topMax):
-    """Responde a un comentario con el Top del Random actual
-    
-    Parameters
-    ----------
-    mydb : connection.MySQLConnection
-        Instancia de la base de datos
-    comment : praw.models.Comment
-        Comentario a procesar
-    topMax : int
-        Cantidad máxima de entradas en el top. Debe ser un valor mayor que 0 e igual o menor a 10
-    """
-    
-    if comment is None or topMax <= 0:
-        return
-    
-    randomPostDateIso = datetime.today().date().isocalendar()
-    #randomPostDateIso[1] -> Semana
-    #randomPostDateIso[0] -> Año
-    randomWeek = randomPostDateIso[1]
-    randomYear = randomPostDateIso[0]
-    
-    random, topUsers = randomdata.GetTopForRandomByWeek(mydb, randomWeek, randomYear, topMax)
-    if random is None or topUsers is None:
-        randomPostDateIso = (datetime.today() - timedelta(days=1)).date().isocalendar()
-        #randomPostDateIso[1] -> Semana
-        #randomPostDateIso[0] -> Año
-        randomWeek = randomPostDateIso[1]
-        randomYear = randomPostDateIso[0]
-        
-        random, topUsers = randomdata.GetTopForRandomByWeek(mydb, randomWeek, randomYear, topMax)
-        if random is None or topUsers is None:
-            errorMessage = """Lo siento, no pude encontrar los datos para este Hilo Random.
-
-Por favor, intenta nuevamente más tarde. También puedes ver los últimos datos que tengo [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly/current_comments.csv)
-""" + randomdata.GetInfoText()
-            
-            comment.reply(errorMessage)
-            return
-    
-    topMessage = """Estos son los usuarios con más mensajes en el Hilo Random actual:
-
-Lugar | Usuario | Comentarios
-:--:|:--:|:--:"""
-    topMedals = [ '🥇', '🥈', '🥉', '4°' , '5°' , '6°' , '7°' , '8°' , '9°' , '10°' ]
-    topCount = 0
-    for user in topUsers:
-        if topCount >= topMax or topCount >= len(topMedals):
-            break
-        topMessage = topMessage + '\n' + topMedals[topCount] + '|**' + user['user'] + '**|' + str(user['count'])
-        topCount = topCount + 1
-    
-    topMessage = topMessage + """
-
-Para ver todos los datos, haz click [**aquí**](https://github.com/JPZV/rChileRandom-Bot/blob/data/weekly/current_comments.csv)
-
-También puedes ver los datos de forma gráfica [**aquí**](https://rchile.0x00.cl/)
-""" + randomdata.GetInfoText()
-    
-    comment.reply(topMessage)
 
 def Main():
     print('Starting RandomBot')
@@ -300,6 +208,8 @@ def Main():
         password = os.environ['db_pass'],
         database = os.environ['db_database']
     )
+    
+    interpreters = [ InfoInterpreter(mydb), TopInterpreter(mydb) ]
     
     #Este for nunca se termina ya que es un Stream
     print('Watching for new comments on r/Chile')
@@ -329,7 +239,7 @@ def Main():
         if InsertComment(mydb, commentRID, commentLevel, authorId, randomId, commentUTC, commentNumber):
             print('Comment', commentRID, 'from Random', randomRID, 'added successfully')
             
-            ProcessCommentContent(mydb, comment)
+            ProcessCommentContent(mydb, comment, interpreters)
 
 if __name__ == '__main__':
     while (True):
