@@ -62,7 +62,7 @@ class TopInterpreter(BaseInterpreter):
         randomWeek = randomPostDateIso[1]
         randomYear = randomPostDateIso[0]
         
-        random, topUsers = randomdata.GetTopForRandomByWeek(mydb, randomWeek, randomYear, topMax)
+        random, topUsers = randomdata.GetTopForRandomByWeek(self.MyDB, randomWeek, randomYear, maxTop)
         if random is None or topUsers is None:
             randomPostDateIso = (datetime.today() - timedelta(days=1)).date().isocalendar()
             #randomPostDateIso[1] -> Semana
@@ -70,7 +70,7 @@ class TopInterpreter(BaseInterpreter):
             randomWeek = randomPostDateIso[1]
             randomYear = randomPostDateIso[0]
             
-            random, topUsers = randomdata.GetTopForRandomByWeek(mydb, randomWeek, randomYear, topMax)
+            random, topUsers = randomdata.GetTopForRandomByWeek(self.MyDB, randomWeek, randomYear, maxTop)
             if random is None or topUsers is None:
                 errorMessage = """Lo siento, no pude encontrar los datos para este Hilo Random.
 
@@ -84,12 +84,18 @@ Por favor, intenta nuevamente más tarde. También puedes ver los últimos datos
 
 Lugar | Usuario | Comentarios
 :--:|:--:|:--:"""
-        topMedals = [ '🥇', '🥈', '🥉', '4°' , '5°' , '6°' , '7°' , '8°' , '9°' , '10°' ]
+        topMedals = [ '🥇', '🥈', '🥉' ]
         topCount = 0
         for user in topUsers:
-            if topCount >= topMax or topCount >= len(topMedals):
+            if topCount >= maxTop:
                 break
-            topMessage = topMessage + '\n' + topMedals[topCount] + '|**' + user['user'] + '**|' + str(user['count'])
+            
+            if topCount < len(topMedals):
+                medal = topMedals[topCount]
+            else:
+                medal = str(topCount + 1) + '°'
+            
+            topMessage = topMessage + '\n' + medal + '|**' + user['user'] + '**|' + str(user['count'])
             topCount = topCount + 1
         
         topMessage = topMessage + """
