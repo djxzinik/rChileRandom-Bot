@@ -138,8 +138,6 @@ def GetInfoText():
 ___
 
 Soy un bot y este mensaje fue realizado automáticamente. [**Más información**](https://github.com/JPZV/rChileRandom-Bot/)
-
-[**Noticia fin del servicio**](https://github.com/JPZV/rChileRandom-Bot/blob/main/NOTICE.md)
 """
 
 def GetRandomByWeek(mydb, week, year):
