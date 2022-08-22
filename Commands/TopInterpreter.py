@@ -50,7 +50,7 @@ class TopInterpreter(BaseInterpreter):
         maxTop = self.IntTryParse(arg)
         if maxTop is None or maxTop <= 0:
             maxTop = 3
-        elif maxTop > 50:
+        elif maxTop > 25:
             maxTop = 25
         
         if comment is None:
